@@ -1,0 +1,82 @@
+﻿@model IEnumerable<Vidly.Models.Customer>
+    @*Using IEnumberable as this page is only iterating over a list*@
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@Html.ActionLink("New Customer", "New", "Customers", null, new {@class = "btn btn-default"})
+<h2>Customers</h2>
+@if (!Model.Any())
+{
+    <p>No Customers!</p>
+}
+else
+{
+    <table id ="customers" class="table table-bordered table-hover">
+        <thead>
+        <tr>
+            <th>Customer</th>
+            <th>Membership Type</th>
+            <th>Delete</th>
+        </tr>
+        </thead>
+        <tbody>
+        </tbody>
+
+    </table>
+}
+
+@section scripts
+{
+    <script>
+        $(document).ready(function () {
+            //Creates a table based off the DOM elements using AJAX
+            var table = $("#customers").DataTable({
+                ajax: {
+                    url: "/api/customers/",
+                    dataSrc: ""
+                },
+                columns: [
+                    {
+                        data: "name",
+                        render: function(data, type, customer) {
+                            return "<a href='/customers/edit/" + customer.id + "'>" + customer.name + "</a>";
+                        }
+                    },
+                    {
+                        data: "membershipType.name"
+                    },
+                    {
+                        data: "id",
+                        render: function(data) {
+                            return "<button class='btn-link js-delete' data-customer-id=" + data + ">Delete</button>";
+                        }
+
+                    }
+                ]
+            });
+
+            $("#customers").on("click",
+                ".js-delete",
+                function() {
+                    var button = $(this);
+                    //if truthy value
+                    bootbox.confirm("Are you sure you want to delete this customer?",
+                        function(result) {
+                            if (result) {
+                                $.ajax({
+                                    url: "/api/customers/" + button.attr("data-customer-id"),
+                                    method: "DELETE",
+                                    success: function () {
+                                        table.row(button.parents("tr")).remove().draw();
+                                        
+                                    }
+                                });
+                            }
+                        });
+                });
+        });
+    </script>
+
+
+}
